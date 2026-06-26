@@ -43,10 +43,10 @@ export default function Navbar({ activePage, setActivePage, hasData }) {
             <Thermometer size={18} color="#fff" />
           </div>
           <span>
-            TKM <span style={{ color: 'var(--color-cyan)' }}>HVAC</span>
+            DEMO <span style={{ color: 'var(--color-cyan)' }}>Temperature</span>
           </span>
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-3)', fontWeight: 400 }}>
-            Line Fac08
+            Monitor
           </span>
         </a>
 

@@ -87,7 +87,7 @@ export default function OverviewPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `TKM_Export_${dayFilter}_${Date.now()}.csv`;
+    a.download = `DEMO_Export_${dayFilter}_${Date.now()}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };

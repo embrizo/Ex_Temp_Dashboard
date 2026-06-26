@@ -1,9 +1,20 @@
 import { useData } from '../context/DataContext';
 import CSVUploader from '../components/CSVUploader';
-import { Upload, FileText, Info } from 'lucide-react';
+import { Upload, FileText, Info, Download } from 'lucide-react';
 
 export default function UploadPage({ onUploaded }) {
   const { stats, fileName, parsedRows } = useData();
+
+  const downloadExampleCSV = () => {
+    const csvContent = `"TimeStamp","Temperature","High","Low","Status"\n2026-06-01 12:42:00,24.46,80.0,15.0,="NORMAL"\n2026-06-01 12:43:00,21.16,80.0,15.0,="NORMAL"\n2026-06-01 12:44:00,24.62,80.0,15.0,="NORMAL"\n2026-06-01 12:45:00,81.0,80.0,15.0,="HIGH"\n2026-06-01 12:46:00,14.0,80.0,15.0,="LOW"`;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Example_Temperature_Data.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="page-wrapper">
@@ -17,7 +28,7 @@ export default function UploadPage({ onUploaded }) {
             Upload Temperature Log
           </h1>
           <p style={{ fontSize: 'var(--text-base)', color: 'var(--color-text-2)', maxWidth: 560 }}>
-            Upload a CSV export from your TUAIRWASHER temperature monitoring system.
+            Upload a CSV export from your DEMO temperature monitoring system.
             The dashboard will automatically parse and visualize the data.
           </p>
         </div>
@@ -29,8 +40,13 @@ export default function UploadPage({ onUploaded }) {
 
             {/* Schema hint */}
             <div className="glass-card" style={{ padding: 'var(--space-5)', marginTop: 'var(--space-4)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-3)', color: 'var(--color-cyan)', fontSize: 'var(--text-sm)', fontWeight: 600 }}>
-                <Info size={14} /> Expected CSV Format
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-3)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', color: 'var(--color-cyan)', fontSize: 'var(--text-sm)', fontWeight: 600 }}>
+                  <Info size={14} /> Expected CSV Format
+                </div>
+                <button className="btn btn-ghost btn-sm" onClick={downloadExampleCSV}>
+                  <Download size={14} /> Example CSV
+                </button>
               </div>
               <div style={{ fontFamily: 'monospace', fontSize: 'var(--text-xs)', color: 'var(--color-text-3)', lineHeight: 1.8 }}>
                 <div style={{ color: 'var(--color-cyan)', marginBottom: 4 }}>"TimeStamp","Temperature","High","Low","Status"</div>
@@ -80,7 +96,7 @@ export default function UploadPage({ onUploaded }) {
               <div className="glass-card" style={{ padding: 'var(--space-5)' }}>
                 <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-text-2)', marginBottom: 'var(--space-3)' }}>No Data Loaded</div>
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-3)', lineHeight: 1.7 }}>
-                  Upload a TUAIRWASHER temperature CSV to begin monitoring.
+                  Upload a DEMO temperature CSV to begin monitoring.
                   The dashboard will display trends, alerts, and statistics.
                 </div>
               </div>

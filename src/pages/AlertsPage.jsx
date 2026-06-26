@@ -56,7 +56,7 @@ export default function AlertsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `TKM_Alerts_${Date.now()}.csv`;
+    a.download = `DEMO_Alerts_${Date.now()}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };

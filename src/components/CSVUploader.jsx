@@ -78,7 +78,7 @@ export default function CSVUploader({ onUploaded }) {
               Drop CSV file here or <span style={{ color: 'var(--color-cyan)' }}>browse</span>
             </div>
             <div className="drop-zone-subtitle" style={{ marginTop: 8 }}>
-              Supports TUAIRWASHER temperature logs · up to 50,000 rows
+              Supports DEMO temperature logs · up to 50,000 rows
             </div>
             <div style={{ marginTop: 'var(--space-4)', display: 'flex', gap: 'var(--space-2)', justifyContent: 'center', flexWrap: 'wrap' }}>
               <span className="tag tag-cyan">TimeStamp</span>
