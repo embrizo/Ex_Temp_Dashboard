@@ -1,36 +1,41 @@
 import { useState } from 'react';
 import { DataProvider, useData } from './context/DataContext';
 import Navbar from './components/Navbar';
-import UploadPage from './pages/UploadPage';
+import HomePage from './pages/HomePage';
+import TemplatesPage from './pages/TemplatesPage';
 import OverviewPage from './pages/OverviewPage';
 import AnalysisPage from './pages/AnalysisPage';
 import HeatmapPage from './pages/HeatmapPage';
 import AlertsPage from './pages/AlertsPage';
 
 function AppContent() {
-  const { stats } = useData();
-  const hasData = Boolean(stats);
-  const [page, setPage] = useState('upload');
+  const { activeSensorId } = useData();
+  const [page, setPage] = useState('overview');
+  const [homePage, setHomePage] = useState('sensors');
 
-  const handleUploaded = () => {
-    if (stats) setPage('overview');
-  };
-
-  const renderPage = () => {
+  const renderDashboardPage = () => {
     switch (page) {
-      case 'upload':   return <UploadPage onUploaded={() => setPage('overview')} />;
       case 'overview': return <OverviewPage />;
       case 'analysis': return <AnalysisPage />;
       case 'heatmap':  return <HeatmapPage />;
       case 'alerts':   return <AlertsPage />;
-      default:         return <UploadPage onUploaded={() => setPage('overview')} />;
+      default:         return <OverviewPage />;
     }
   };
 
+  if (!activeSensorId) {
+    return (
+      <>
+        <Navbar activePage={homePage} setActivePage={setHomePage} isHome={true} />
+        {homePage === 'sensors' ? <HomePage /> : <TemplatesPage />}
+      </>
+    );
+  }
+
   return (
     <>
-      <Navbar activePage={page} setActivePage={setPage} hasData={hasData} />
-      {renderPage()}
+      <Navbar activePage={page} setActivePage={setPage} isHome={false} />
+      {renderDashboardPage()}
     </>
   );
 }

@@ -19,6 +19,9 @@ export default function AlertsPage() {
   const [page, setPage] = useState(1);
   const PER_PAGE = 50;
 
+  const metricName = stats?.metricName || 'Temperature';
+  const unit = stats?.unit || '°C';
+
   const days = useMemo(() => [...new Set(parsedRows.map(r => r.dayKey))].sort(), [parsedRows]);
 
   const alertRows = useMemo(() => {
@@ -48,9 +51,9 @@ export default function AlertsPage() {
   }, [parsedRows]);
 
   const exportAlerts = () => {
-    const header = 'TimeStamp,Temperature,High,Low,Status\n';
+    const header = `TimeStamp,${metricName},High,Low,Status\n`;
     const body = alertRows.map(r =>
-      `${r.timestamp.toISOString()},${r.temp},${r.high},${r.low},${r.status}`
+      `${r.timestamp.toISOString()},${r.val},${r.high},${r.low},${r.status}`
     ).join('\n');
     const blob = new Blob([header + body], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -100,8 +103,8 @@ export default function AlertsPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--space-4)', marginBottom: 'var(--space-6)' }}>
           {[
             { label: 'Total Alert Readings', value: breakdown.total.toLocaleString(), color: 'amber', glowClass: 'card-glow-amber' },
-            { label: 'HIGH Temp Events', value: breakdown.high.toLocaleString(), color: 'red', glowClass: 'card-glow-red' },
-            { label: 'LOW Temp Events', value: breakdown.low.toLocaleString(), color: 'blue', glowClass: 'card-glow-blue' },
+            { label: 'HIGH Events', value: breakdown.high.toLocaleString(), color: 'red', glowClass: 'card-glow-red' },
+            { label: 'LOW Events', value: breakdown.low.toLocaleString(), color: 'blue', glowClass: 'card-glow-blue' },
             { label: 'Alert Episodes', value: breakdown.events.toLocaleString(), color: 'cyan', glowClass: 'card-glow-cyan' },
           ].map((c, i) => (
             <div key={i} className={`glass-card kpi-card ${c.color} ${c.glowClass} stagger-child`} style={{ '--i': i }}>
@@ -138,7 +141,7 @@ export default function AlertsPage() {
                 <tr>
                   <th>#</th>
                   <th>Timestamp</th>
-                  <th>Temperature</th>
+                  <th>{metricName}</th>
                   <th>High Threshold</th>
                   <th>Low Threshold</th>
                   <th>Status</th>
@@ -148,9 +151,9 @@ export default function AlertsPage() {
               <tbody>
                 {paginated.map((row, i) => {
                   const deviation = row.status === 'HIGH'
-                    ? +(row.temp - row.high).toFixed(2)
+                    ? +(row.val - row.high).toFixed(2)
                     : row.status === 'LOW'
-                    ? +(row.temp - row.low).toFixed(2)
+                    ? +(row.val - row.low).toFixed(2)
                     : 0;
                   return (
                     <tr key={row.idx}>
@@ -159,15 +162,15 @@ export default function AlertsPage() {
                         {row.timestamp.toLocaleString('en-GB')}
                       </td>
                       <td style={{ fontWeight: 700, color: row.status === 'HIGH' ? 'var(--color-red)' : row.status === 'LOW' ? 'var(--color-blue-light)' : 'var(--color-cyan)' }}>
-                        {row.temp.toFixed(2)} °C
+                        {row.val.toFixed(2)} {unit}
                       </td>
-                      <td style={{ color: 'var(--color-red)', opacity: 0.7 }}>{row.high} °C</td>
-                      <td style={{ color: 'var(--color-blue-light)', opacity: 0.7 }}>{row.low} °C</td>
+                      <td style={{ color: 'var(--color-red)', opacity: 0.7 }}>{row.high} {unit}</td>
+                      <td style={{ color: 'var(--color-blue-light)', opacity: 0.7 }}>{row.low} {unit}</td>
                       <td><StatusBadge status={row.status} /></td>
                       <td>
                         {deviation !== 0 && (
                           <span style={{ color: deviation > 0 ? 'var(--color-red)' : 'var(--color-blue-light)', fontWeight: 600, fontSize: 'var(--text-xs)' }}>
-                            {deviation > 0 ? '+' : ''}{deviation} °C
+                            {deviation > 0 ? '+' : ''}{deviation} {unit}
                           </span>
                         )}
                         {deviation === 0 && <span style={{ color: 'var(--color-text-3)' }}>—</span>}

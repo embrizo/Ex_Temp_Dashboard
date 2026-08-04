@@ -1,7 +1,9 @@
-import { Thermometer, Upload, Moon, Sun } from 'lucide-react';
+import { Thermometer, Wind, ArrowLeft, Moon, Sun, Layers } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useData } from '../context/DataContext';
 
-export default function Navbar({ activePage, setActivePage, hasData }) {
+export default function Navbar({ activePage, setActivePage, isHome }) {
+  const { activeSensorId, setActiveSensorId, stats } = useData();
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
@@ -26,29 +28,38 @@ export default function Navbar({ activePage, setActivePage, hasData }) {
     localStorage.setItem('theme', nowDark ? 'dark' : 'light');
   };
 
-  const pages = [
-    { id: 'upload', label: 'Upload Data' },
-    { id: 'overview', label: 'Overview', disabled: !hasData },
-    { id: 'analysis', label: 'Temperature Analysis', disabled: !hasData },
-    { id: 'heatmap', label: 'Heat Pattern', disabled: !hasData },
-    { id: 'alerts', label: 'Alerts', disabled: !hasData },
+  const metricName = stats?.metricName || 'Temperature';
+  const Icon = isHome ? Layers : (stats?.type === 'AirFlow' ? Wind : Thermometer);
+
+  const homePages = [
+    { id: 'sensors', label: 'Sensors' },
+    { id: 'templates', label: 'Example CSVs' },
   ];
+
+  const dashboardPages = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'analysis', label: `${metricName} Analysis` },
+    { id: 'heatmap', label: stats?.type === 'AirFlow' ? 'Flow Pattern' : 'Heat Pattern' },
+    { id: 'alerts', label: 'Alerts' },
+  ];
+
+  const pages = isHome ? homePages : dashboardPages;
 
   return (
     <nav className="navbar" role="navigation" aria-label="Main navigation">
       <div className="navbar-inner">
         {/* Logo */}
-        <a href="#" className="navbar-logo" id="navbar-logo" onClick={(e) => e.preventDefault()}>
-          <div className="navbar-logo-icon">
-            <Thermometer size={18} color="#fff" />
+        <div className="navbar-logo">
+          <div className="navbar-logo-icon" style={{ background: isHome ? 'var(--color-purple)' : (stats?.type === 'AirFlow' ? 'var(--color-blue-light)' : 'var(--color-cyan)') }}>
+            <Icon size={18} color="#fff" />
           </div>
           <span>
-            DEMO <span style={{ color: 'var(--color-cyan)' }}>Temperature</span>
+            DEMO <span style={{ color: isHome ? 'var(--color-purple)' : (stats?.type === 'AirFlow' ? 'var(--color-blue-light)' : 'var(--color-cyan)') }}>{isHome ? 'Monitor' : metricName}</span>
           </span>
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-3)', fontWeight: 400 }}>
-            Monitor
+            {isHome ? 'System' : 'Dashboard'}
           </span>
-        </a>
+        </div>
 
         {/* Nav Links */}
         <ul className="navbar-links" role="list">
@@ -57,10 +68,7 @@ export default function Navbar({ activePage, setActivePage, hasData }) {
               <button
                 id={`nav-${page.id}`}
                 className={`navbar-link ${activePage === page.id ? 'active' : ''}`}
-                onClick={() => !page.disabled && setActivePage(page.id)}
-                disabled={page.disabled}
-                style={{ opacity: page.disabled ? 0.4 : 1, cursor: page.disabled ? 'not-allowed' : 'pointer' }}
-                title={page.disabled ? 'Upload data first' : ''}
+                onClick={() => setActivePage(page.id)}
               >
                 {page.label}
               </button>
@@ -79,23 +87,24 @@ export default function Navbar({ activePage, setActivePage, hasData }) {
             {isDark ? <Sun size={16} /> : <Moon size={16} />}
           </button>
 
-          {hasData && (
-            <button
-              id="nav-upload-btn"
-              className="btn btn-ghost btn-sm"
-              onClick={() => setActivePage('upload')}
-              title="Upload new file"
-            >
-              <Upload size={14} />
-              Upload
-            </button>
+          {!isHome && (
+            <>
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => setActiveSensorId(null)}
+                title="Back to sensors"
+              >
+                <ArrowLeft size={14} />
+                Sensors List
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 8 }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-green)', animation: 'pulse-dot 1.6s ease-in-out infinite' }} />
+                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-green)', fontWeight: 600 }}>
+                  Live
+                </span>
+              </div>
+            </>
           )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 8 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: hasData ? 'var(--color-green)' : 'var(--color-text-3)', animation: hasData ? 'pulse-dot 1.6s ease-in-out infinite' : 'none' }} />
-            <span style={{ fontSize: 'var(--text-xs)', color: hasData ? 'var(--color-green)' : 'var(--color-text-3)', fontWeight: 600 }}>
-              {hasData ? 'Live' : 'No Data'}
-            </span>
-          </div>
         </div>
       </div>
     </nav>

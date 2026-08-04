@@ -4,7 +4,7 @@ import {
   ResponsiveContainer, ReferenceLine, Area, AreaChart, Legend, Brush
 } from 'recharts';
 import { useMemo, useState } from 'react';
-import { Thermometer, TrendingUp, TrendingDown, AlertTriangle, Calendar, Download } from 'lucide-react';
+import { Thermometer, Wind, TrendingUp, TrendingDown, AlertTriangle, Calendar, Download } from 'lucide-react';
 
 const statusColor = (s) => {
   if (s === 'HIGH') return 'var(--color-red)';
@@ -12,25 +12,26 @@ const statusColor = (s) => {
   return 'var(--color-green)';
 };
 
-const CustomTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  const d = payload[0]?.payload;
-  return (
-    <div style={{ background: 'var(--color-bg-2)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)', minWidth: 180 }}>
-      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-3)', marginBottom: 4 }}>{d?.timestamp?.toLocaleString('en-GB')}</div>
-      <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-cyan)' }}>{d?.temp?.toFixed(2)} °C</div>
-      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-red)' }}>H: {d?.high}</span>
-        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-blue-light)' }}>L: {d?.low}</span>
-        <span style={{ fontSize: 'var(--text-xs)', color: statusColor(d?.status), fontWeight: 700 }}>{d?.status}</span>
-      </div>
-    </div>
-  );
-};
-
 export default function OverviewPage() {
   const { parsedRows, stats, fileName } = useData();
   const [dayFilter, setDayFilter] = useState('all');
+
+  // Custom tooltip inside component to access stats.unit
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    const d = payload[0]?.payload;
+    return (
+      <div style={{ background: 'var(--color-bg-2)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)', minWidth: 180 }}>
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-3)', marginBottom: 4 }}>{d?.timestamp?.toLocaleString('en-GB')}</div>
+        <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-cyan)' }}>{d?.val?.toFixed(2)} {stats?.unit}</div>
+        <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-red)' }}>H: {d?.high}</span>
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-blue-light)' }}>L: {d?.low}</span>
+          <span style={{ fontSize: 'var(--text-xs)', color: statusColor(d?.status), fontWeight: 700 }}>{d?.status}</span>
+        </div>
+      </div>
+    );
+  };
 
   // Get unique days
   const days = useMemo(() => {
@@ -54,11 +55,11 @@ export default function OverviewPage() {
   // Filtered stats
   const fStats = useMemo(() => {
     if (!filtered.length) return null;
-    const temps = filtered.map(r => r.temp);
-    const avg = temps.reduce((a, b) => a + b, 0) / temps.length;
-    const max = Math.max(...temps);
-    const min = Math.min(...temps);
-    const std = Math.sqrt(temps.reduce((a, b) => a + (b - avg) ** 2, 0) / temps.length);
+    const vals = filtered.map(r => r.val);
+    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const max = Math.max(...vals);
+    const min = Math.min(...vals);
+    const std = Math.sqrt(vals.reduce((a, b) => a + (b - avg) ** 2, 0) / vals.length);
     return {
       avg: +avg.toFixed(2),
       max: +max.toFixed(2),
@@ -77,11 +78,15 @@ export default function OverviewPage() {
   const currentHigh = parsedRows[parsedRows.length - 1]?.high;
   const currentLow  = parsedRows[parsedRows.length - 1]?.low;
 
+  const Icon = stats.type === 'AirFlow' ? Wind : Thermometer;
+  const unit = stats.unit;
+  const metricName = stats.metricName;
+
   // Export CSV
   const exportCSV = () => {
-    const header = 'TimeStamp,Temperature,High,Low,Status\n';
+    const header = `TimeStamp,${metricName},High,Low,Status\n`;
     const body = filtered.map(r =>
-      `${r.timestamp.toISOString()},${r.temp},${r.high},${r.low},${r.status}`
+      `${r.timestamp.toISOString()},${r.val},${r.high},${r.low},${r.status}`
     ).join('\n');
     const blob = new Blob([header + body], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -99,7 +104,7 @@ export default function OverviewPage() {
         <div style={{ paddingTop: 'var(--space-6)', marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
           <div>
             <div className="eyebrow" style={{ marginBottom: 'var(--space-2)' }}>
-              <Thermometer size={12} /> Supply Fan K — Temperature Overview
+              <Icon size={12} /> {fileName} — {metricName} Overview
             </div>
             <h1 style={{ fontSize: 'var(--text-2xl)', fontWeight: 800, letterSpacing: '-0.02em' }}>
               Overview Dashboard
@@ -125,22 +130,22 @@ export default function OverviewPage() {
         <div className="kpi-grid" style={{ marginBottom: 'var(--space-6)' }}>
           {[
             {
-              label: 'Current Temperature', icon: <Thermometer size={14} />,
-              value: stats.lastTemp?.toFixed(1), unit: '°C',
+              label: `Current ${metricName}`, icon: <Icon size={14} />,
+              value: stats.lastVal?.toFixed(1), unit: unit,
               color: 'cyan', glowClass: 'card-glow-cyan',
               sub: `Status: ${stats.lastStatus}`,
             },
             {
-              label: 'Average Temperature', icon: <TrendingUp size={14} />,
-              value: fStats?.avg, unit: '°C',
+              label: `Average ${metricName}`, icon: <TrendingUp size={14} />,
+              value: fStats?.avg, unit: unit,
               color: 'blue', glowClass: 'card-glow-blue',
-              sub: `σ = ${fStats?.std} °C`,
+              sub: `σ = ${fStats?.std} ${unit}`,
             },
             {
               label: 'Max / Min', icon: <TrendingUp size={14} />,
-              value: fStats?.max, unit: '°C',
+              value: fStats?.max, unit: unit,
               color: 'red', glowClass: 'card-glow-red',
-              sub: `Min: ${fStats?.min} °C`,
+              sub: `Min: ${fStats?.min} ${unit}`,
             },
             {
               label: 'Alert Events', icon: <AlertTriangle size={14} />,
@@ -157,9 +162,9 @@ export default function OverviewPage() {
             },
             {
               label: 'Threshold High', icon: <TrendingUp size={14} />,
-              value: currentHigh, unit: '°C',
+              value: currentHigh, unit: unit,
               color: 'amber', glowClass: 'card-glow-amber',
-              sub: `Low threshold: ${currentLow} °C`,
+              sub: `Low threshold: ${currentLow} ${unit}`,
             },
           ].map((kpi, i) => (
             <div key={i} className={`glass-card kpi-card ${kpi.color} ${kpi.glowClass} stagger-child`} style={{ '--i': i }}>
@@ -171,24 +176,24 @@ export default function OverviewPage() {
               </div>
               <div className="kpi-sub">{kpi.sub}</div>
               <div className="tele-bar" style={{ marginTop: 'var(--space-3)' }}>
-                <div className={`tele-bar-fill ${kpi.color}`} style={{ width: kpi.unit === '%' ? `${kpi.value}%` : kpi.unit === '°C' && kpi.label.includes('Avg') ? `${Math.min((kpi.value / 80) * 100, 100)}%` : '60%' }} />
+                <div className={`tele-bar-fill ${kpi.color}`} style={{ width: kpi.unit === '%' ? `${kpi.value}%` : kpi.label.includes('Avg') ? '50%' : '60%' }} />
               </div>
             </div>
           ))}
         </div>
 
-        {/* Temperature Timeline */}
+        {/* Timeline */}
         <div className="glass-card chart-panel card-glow-cyan" style={{ marginBottom: 'var(--space-4)' }}>
           <div className="chart-header">
             <div>
-              <div className="chart-title">Temperature Timeline</div>
+              <div className="chart-title">{metricName} Timeline</div>
               <div className="chart-subtitle">
                 {dayFilter === 'all' ? 'Full dataset' : dayFilter} · {filtered.length.toLocaleString()} records
                 {filtered.length > 2000 && <span style={{ marginLeft: 8 }}>· (downsampled to 2,000 pts for display)</span>}
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 'var(--text-xs)', color: 'var(--color-text-3)' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 12, height: 2, background: 'var(--color-cyan)', display: 'inline-block' }} /> Temperature</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 12, height: 2, background: 'var(--color-cyan)', display: 'inline-block' }} /> {metricName}</span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 12, height: 2, background: 'var(--color-red)', display: 'inline-block', borderBottom: '2px dashed' }} /> High</span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 12, height: 2, background: 'var(--color-blue-light)', display: 'inline-block', borderBottom: '2px dashed' }} /> Low</span>
             </div>
@@ -196,7 +201,7 @@ export default function OverviewPage() {
           <ResponsiveContainer width="100%" height={360}>
             <AreaChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
               <defs>
-                <linearGradient id="tempGradient" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="valGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#06B6D4" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="#06B6D4" stopOpacity={0} />
                 </linearGradient>
@@ -216,13 +221,13 @@ export default function OverviewPage() {
                 domain={['auto', 'auto']}
                 stroke="var(--color-text-3)"
                 tick={{ fontSize: 11, fill: 'var(--color-text-3)' }}
-                tickFormatter={(v) => `${v}°`}
+                tickFormatter={(v) => stats.type === 'Temperature' ? `${v}°` : v}
                 width={40}
               />
               <Tooltip content={<CustomTooltip />} />
-              <ReferenceLine y={currentHigh} stroke="var(--color-red)" strokeDasharray="5 5" strokeOpacity={0.7} label={{ value: `H: ${currentHigh}°`, fill: 'var(--color-red)', fontSize: 10, position: 'right' }} />
-              <ReferenceLine y={currentLow} stroke="var(--color-blue-light)" strokeDasharray="5 5" strokeOpacity={0.7} label={{ value: `L: ${currentLow}°`, fill: 'var(--color-blue-light)', fontSize: 10, position: 'right' }} />
-              <Area type="monotone" dataKey="temp" stroke="var(--color-cyan)" strokeWidth={1.5} fill="url(#tempGradient)" dot={false} activeDot={{ r: 4, fill: 'var(--color-cyan)', stroke: '#fff', strokeWidth: 2 }} />
+              <ReferenceLine y={currentHigh} stroke="var(--color-red)" strokeDasharray="5 5" strokeOpacity={0.7} label={{ value: `H: ${currentHigh}`, fill: 'var(--color-red)', fontSize: 10, position: 'right' }} />
+              <ReferenceLine y={currentLow} stroke="var(--color-blue-light)" strokeDasharray="5 5" strokeOpacity={0.7} label={{ value: `L: ${currentLow}`, fill: 'var(--color-blue-light)', fontSize: 10, position: 'right' }} />
+              <Area type="monotone" dataKey="val" stroke="var(--color-cyan)" strokeWidth={1.5} fill="url(#valGradient)" dot={false} activeDot={{ r: 4, fill: 'var(--color-cyan)', stroke: '#fff', strokeWidth: 2 }} />
               <Brush dataKey="ts" height={24} stroke="var(--color-border)" fill="var(--color-bg-2)" travellerWidth={6} tickFormatter={(ts) => new Date(ts).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} />
             </AreaChart>
           </ResponsiveContainer>
@@ -231,10 +236,10 @@ export default function OverviewPage() {
         {/* Stats row */}
         <div className="stats-grid" style={{ marginBottom: 'var(--space-4)' }}>
           {[
-            { label: 'Minimum', value: fStats?.min, unit: '°C', color: 'var(--color-blue-light)' },
-            { label: 'Maximum', value: fStats?.max, unit: '°C', color: 'var(--color-red)' },
-            { label: 'Average', value: fStats?.avg, unit: '°C', color: 'var(--color-cyan)' },
-            { label: 'Std Dev (σ)', value: fStats?.std, unit: '°C', color: 'var(--color-purple-light)' },
+            { label: 'Minimum', value: fStats?.min, unit: unit, color: 'var(--color-blue-light)' },
+            { label: 'Maximum', value: fStats?.max, unit: unit, color: 'var(--color-red)' },
+            { label: 'Average', value: fStats?.avg, unit: unit, color: 'var(--color-cyan)' },
+            { label: 'Std Dev (σ)', value: fStats?.std, unit: unit, color: 'var(--color-purple-light)' },
           ].map((s, i) => (
             <div key={i} className="stat-box stagger-child" style={{ '--i': i }}>
               <div className="stat-box-value" style={{ color: s.color }}>{s.value}<span style={{ fontSize: 'var(--text-base)', fontWeight: 500, color: 'var(--color-text-3)' }}>{s.unit}</span></div>
@@ -257,9 +262,9 @@ export default function OverviewPage() {
                 <tr>
                   <th>Date</th>
                   <th>Records</th>
-                  <th>Avg °C</th>
-                  <th>Min °C</th>
-                  <th>Max °C</th>
+                  <th>Avg {unit}</th>
+                  <th>Min {unit}</th>
+                  <th>Max {unit}</th>
                   <th>HIGH</th>
                   <th>LOW</th>
                   <th>Normal %</th>
@@ -268,10 +273,10 @@ export default function OverviewPage() {
               <tbody>
                 {days.map(day => {
                   const dayRows = parsedRows.filter(r => r.dayKey === day);
-                  const temps = dayRows.map(r => r.temp);
-                  const avg = (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1);
-                  const min = Math.min(...temps).toFixed(1);
-                  const max = Math.max(...temps).toFixed(1);
+                  const vals = dayRows.map(r => r.val);
+                  const avg = (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1);
+                  const min = Math.min(...vals).toFixed(1);
+                  const max = Math.max(...vals).toFixed(1);
                   const high = dayRows.filter(r => r.status === 'HIGH').length;
                   const low  = dayRows.filter(r => r.status === 'LOW').length;
                   const normalPct = ((dayRows.filter(r => r.status === 'NORMAL').length / dayRows.length) * 100).toFixed(1);
