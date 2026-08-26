@@ -1,8 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -11,9 +10,9 @@ from app.database import Base
 class UploadBatch(Base):
     __tablename__ = "upload_batches"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     sensor_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("sensors.id", ondelete="CASCADE"), nullable=False
+        Uuid(as_uuid=True), ForeignKey("sensors.id", ondelete="CASCADE"), nullable=False
     )
     file_name: Mapped[str | None] = mapped_column(String, nullable=True)
     row_count: Mapped[int | None] = mapped_column(Integer, nullable=True)

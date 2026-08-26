@@ -42,15 +42,15 @@ jobs:
         with:
           python-version: "3.11"
           cache: "pip"
-          cache-dependency-path: backend/requirements.txt
+          cache-dependency-path: backend/requirements-dev.txt
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt httpx
+          pip install -r requirements-dev.txt
 
       - name: Compile check (syntax)
-        run: python -m compileall app alembic
+        run: python -m compileall app alembic tests
 
       - name: Run Alembic migrations against ephemeral Postgres
         run: alembic upgrade head
@@ -71,3 +71,6 @@ jobs:
 
           print("OK:", r.json())
           PY
+
+      - name: Run test suite (CRUD routers, in-memory SQLite)
+        run: python -m pytest -v
