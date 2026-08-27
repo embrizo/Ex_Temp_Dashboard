@@ -4,11 +4,13 @@ import { Pencil, Trash2 } from 'lucide-react';
 import Breadcrumb from '../../components/hierarchy/Breadcrumb';
 import EntityModal from '../../components/hierarchy/EntityModal';
 import ConfirmDialog from '../../components/hierarchy/ConfirmDialog';
+import SensorDataDashboard from '../../components/hierarchy/SensorDataDashboard';
 import { useCustomer } from '../../hooks/useCustomers';
 import { useFactory } from '../../hooks/useFactories';
 import { useLine } from '../../hooks/useLines';
 import { useMachine } from '../../hooks/useMachines';
 import { useSensor } from '../../hooks/useSensors';
+import { useReadings } from '../../hooks/useReadings';
 import { deleteSensor, updateSensor } from '../../services/sensors';
 
 const SENSOR_FIELDS = [
@@ -28,6 +30,7 @@ export default function SensorDetailPage() {
   const { data: line } = useLine(lineId);
   const { data: machine } = useMachine(machineId);
   const { data: sensor, loading, error, reload } = useSensor(sensorId);
+  const { data: readings, loading: readingsLoading, reload: reloadReadings } = useReadings(sensorId);
 
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -106,11 +109,11 @@ export default function SensorDetailPage() {
               </div>
             </div>
 
-            <div className="hierarchy-empty" style={{ marginTop: 'var(--space-6)' }}>
-              No readings yet. Data upload/live feed for this sensor is coming in a later phase.
-              In the meantime, the <a href="/legacy">Legacy CSV Tool</a> can be used to explore the
-              existing charts with a sample CSV.
-            </div>
+            {readingsLoading ? (
+              <div className="hierarchy-loading" style={{ marginTop: 'var(--space-6)' }}>Loading readings…</div>
+            ) : (
+              <SensorDataDashboard sensor={sensor} readings={readings || []} onUploaded={reloadReadings} />
+            )}
           </>
         )}
 

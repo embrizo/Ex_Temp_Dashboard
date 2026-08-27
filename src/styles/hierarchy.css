@@ -2,6 +2,15 @@
    HIERARCHY NAVIGATION (Customers → Sensors)
    ═══════════════════════════════════════ */
 
+/* SensorDataDashboard reuses the legacy Overview/Analysis/Heatmap/Alerts
+   pages (each with their own .page-wrapper) inside SensorDetailPage's own
+   .page-wrapper. Collapse the inner one's top-offset/min-height so the
+   fixed-navbar spacing isn't applied twice. */
+.page-wrapper .page-wrapper {
+  padding-top: 0;
+  min-height: 0;
+}
+
 .hierarchy-breadcrumb {
   display: flex;
   align-items: center;
@@ -106,6 +115,34 @@
 .hierarchy-card-chevron {
   margin-left: auto;
   color: var(--color-text-3);
+}
+
+.sensor-dashboard-tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-2);
+  flex-wrap: wrap;
+}
+.sensor-dashboard-tab {
+  background: none;
+  border: none;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-2);
+  cursor: pointer;
+  font-family: inherit;
+}
+.sensor-dashboard-tab:hover {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.sensor-dashboard-tab.active {
+  background: var(--color-surface);
+  color: var(--color-cyan);
 }
 
 .hierarchy-sensor-info {

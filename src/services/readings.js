@@ -8,3 +8,9 @@ export const listReadings = (sensorId, { from, to, limit } = {}) => {
   const qs = params.toString();
   return api.get(`/sensors/${sensorId}/readings${qs ? `?${qs}` : ''}`);
 };
+
+export const uploadReadings = (sensorId, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return api.postForm(`/sensors/${sensorId}/upload`, formData);
+};
