@@ -1,11 +1,11 @@
 import { useData } from '../context/DataContext';
 import { useMemo } from 'react';
-import { Flame } from 'lucide-react';
+import { Flame, Wind } from 'lucide-react';
 
-// Interpolate a color on a gradient: cold (blue) → normal (green/cyan) → hot (red)
-function tempToColor(temp, low, high) {
+// Interpolate a color on a gradient: cold/low (blue) → normal (green/cyan) → hot/high (red)
+function valToColor(val, low, high) {
   const range = high - low;
-  const pct = Math.max(0, Math.min(1, (temp - low) / range));
+  const pct = Math.max(0, Math.min(1, (val - low) / range));
   if (pct < 0.25) return `rgba(59,130,246,${0.3 + pct * 1.5})`;  // blue
   if (pct < 0.5)  return `rgba(6,182,212,${0.5 + pct})`;          // cyan
   if (pct < 0.75) return `rgba(16,185,129,${0.6 + pct * 0.5})`;   // green
@@ -15,19 +15,23 @@ function tempToColor(temp, low, high) {
 export default function HeatmapPage() {
   const { parsedRows, stats } = useData();
 
+  const metricName = stats?.metricName || 'Temperature';
+  const unit = stats?.unit || '°C';
+  const Icon = stats?.type === 'AirFlow' ? Wind : Flame;
+
   const high = parsedRows[parsedRows.length - 1]?.high ?? 80;
   const low  = parsedRows[parsedRows.length - 1]?.low  ?? 15;
 
   // Build a [day × hour] grid
   const { days, grid, hourlyStats } = useMemo(() => {
     const daySet = [...new Set(parsedRows.map(r => r.dayKey))].sort();
-    const grid = {}; // grid[day][hour] = {temps[], avg, count}
+    const grid = {}; // grid[day][hour] = {vals[], avg, count}
 
     daySet.forEach(day => { grid[day] = {}; });
     parsedRows.forEach(r => {
       if (!grid[r.dayKey]) grid[r.dayKey] = {};
-      if (!grid[r.dayKey][r.hour]) grid[r.dayKey][r.hour] = { temps: [], alerts: 0 };
-      grid[r.dayKey][r.hour].temps.push(r.temp);
+      if (!grid[r.dayKey][r.hour]) grid[r.dayKey][r.hour] = { vals: [], alerts: 0 };
+      grid[r.dayKey][r.hour].vals.push(r.val);
       if (r.status !== 'NORMAL') grid[r.dayKey][r.hour].alerts++;
     });
 
@@ -35,10 +39,10 @@ export default function HeatmapPage() {
     daySet.forEach(day => {
       for (let h = 0; h < 24; h++) {
         const cell = grid[day][h];
-        if (cell && cell.temps.length) {
-          cell.avg = +(cell.temps.reduce((a, b) => a + b, 0) / cell.temps.length).toFixed(2);
-          cell.max = Math.max(...cell.temps);
-          cell.min = Math.min(...cell.temps);
+        if (cell && cell.vals.length) {
+          cell.avg = +(cell.vals.reduce((a, b) => a + b, 0) / cell.vals.length).toFixed(2);
+          cell.max = Math.max(...cell.vals);
+          cell.min = Math.min(...cell.vals);
         }
       }
     });
@@ -49,7 +53,7 @@ export default function HeatmapPage() {
       if (!all.length) return { hour: h, avg: null, count: 0, alerts: 0 };
       return {
         hour: h,
-        avg: +(all.reduce((a, b) => a + b.temp, 0) / all.length).toFixed(2),
+        avg: +(all.reduce((a, b) => a + b.val, 0) / all.length).toFixed(2),
         count: all.length,
         alerts: all.filter(r => r.status !== 'NORMAL').length,
       };
@@ -66,14 +70,14 @@ export default function HeatmapPage() {
         {/* Header */}
         <div style={{ paddingTop: 'var(--space-6)', marginBottom: 'var(--space-6)' }}>
           <div className="eyebrow" style={{ marginBottom: 'var(--space-2)' }}>
-            <Flame size={12} /> Thermal Pattern
+            <Icon size={12} /> {stats.type === 'AirFlow' ? 'Flow Pattern' : 'Thermal Pattern'}
           </div>
           <h1 style={{ fontSize: 'var(--text-2xl)', fontWeight: 800, letterSpacing: '-0.02em' }}>
-            Heat Pattern Map
+            {stats.type === 'AirFlow' ? 'Flow Pattern Map' : 'Heat Pattern Map'}
           </h1>
           <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-2)', marginTop: 4 }}>
-            Temperature intensity across every hour and day in the dataset.
-            Each cell represents the average temperature for that hour on that day.
+            {metricName} intensity across every hour and day in the dataset.
+            Each cell represents the average {metricName.toLowerCase()} for that hour on that day.
           </p>
         </div>
 
@@ -81,14 +85,14 @@ export default function HeatmapPage() {
         <div className="glass-card chart-panel card-glow-amber" style={{ marginBottom: 'var(--space-4)', overflowX: 'auto' }}>
           <div className="chart-header">
             <div>
-              <div className="chart-title">Day × Hour Temperature Matrix</div>
-              <div className="chart-subtitle">Hover a cell for exact temperature · Color intensity = temperature level</div>
+              <div className="chart-title">Day × Hour {metricName} Matrix</div>
+              <div className="chart-subtitle">Hover a cell for exact value · Color intensity = intensity level</div>
             </div>
             {/* Legend */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--text-xs)', color: 'var(--color-text-3)' }}>
-              <span>Cold</span>
+              <span>Low</span>
               <div style={{ width: 120, height: 10, borderRadius: 5, background: 'linear-gradient(90deg, rgba(59,130,246,0.8), rgba(6,182,212,1), rgba(16,185,129,1), rgba(239,68,68,1))' }} />
-              <span>Hot</span>
+              <span>High</span>
             </div>
           </div>
 
@@ -111,17 +115,17 @@ export default function HeatmapPage() {
                 </div>
                 {Array(24).fill(0).map((_, h) => {
                   const cell = grid[day]?.[h];
-                  if (!cell || !cell.temps?.length) {
+                  if (!cell || !cell.vals?.length) {
                     return (
                       <div key={h} style={{ aspectRatio: '1', background: 'rgba(255,255,255,0.02)', borderRadius: 3 }} />
                     );
                   }
-                  const color = tempToColor(cell.avg, low, high);
+                  const color = valToColor(cell.avg, low, high);
                   const hasAlert = cell.alerts > 0;
                   return (
                     <div
                       key={h}
-                      title={`${day} ${String(h).padStart(2,'0')}:00\nAvg: ${cell.avg}°C\nMax: ${cell.max?.toFixed(1)}°\nMin: ${cell.min?.toFixed(1)}°\nAlerts: ${cell.alerts}`}
+                      title={`${day} ${String(h).padStart(2,'0')}:00\nAvg: ${cell.avg}${unit}\nMax: ${cell.max?.toFixed(1)}${unit}\nMin: ${cell.min?.toFixed(1)}${unit}\nAlerts: ${cell.alerts}`}
                       style={{
                         aspectRatio: '1',
                         background: color,
@@ -145,10 +149,10 @@ export default function HeatmapPage() {
               {hourlyStats.map((h) => (
                 <div
                   key={h.hour}
-                  title={`Hour ${String(h.hour).padStart(2,'0')}:00\nAvg: ${h.avg}°C\n${h.count} records`}
+                  title={`Hour ${String(h.hour).padStart(2,'0')}:00\nAvg: ${h.avg}${unit}\n${h.count} records`}
                   style={{
                     aspectRatio: '1',
-                    background: h.avg != null ? tempToColor(h.avg, low, high) : 'rgba(255,255,255,0.02)',
+                    background: h.avg != null ? valToColor(h.avg, low, high) : 'rgba(255,255,255,0.02)',
                     borderRadius: 3,
                     cursor: 'pointer',
                     border: '1px solid rgba(6,182,212,0.3)',
@@ -184,7 +188,7 @@ export default function HeatmapPage() {
                     h.avg >= high ? 'var(--color-red)' :
                     h.avg <= low ? 'var(--color-blue-light)' : 'var(--color-cyan)',
                 }}>
-                  {h.avg != null ? `${h.avg}°` : '—'}
+                  {h.avg != null ? `${h.avg}` : '—'}
                 </div>
                 {h.alerts > 0 && (
                   <div style={{ fontSize: 9, color: 'var(--color-red)', fontWeight: 700, marginTop: 2 }}>
