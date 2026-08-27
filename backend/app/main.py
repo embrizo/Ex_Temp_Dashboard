@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.deps import get_db
-from app.routers import customers, factories, lines, machines, readings, sensors
+from app.routers import customers, factories, ingest, lines, machines, readings, sensors
 
 app = FastAPI(title="Sensor Dashboard API", version="0.1.0")
 
@@ -23,6 +23,7 @@ app.include_router(lines.router)
 app.include_router(machines.router)
 app.include_router(sensors.router)
 app.include_router(readings.router)
+app.include_router(ingest.router)
 
 
 @app.get("/")

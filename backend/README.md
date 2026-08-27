@@ -30,8 +30,14 @@ uvicorn app.main:app --reload
 - `GET /health` — checks the database connection
 - `GET /docs` — interactive OpenAPI docs
 - CRUD for `/customers`, `/customers/{id}/factories`, `/factories/{id}/lines`,
-  `/lines/{id}/machines`, `/machines/{id}/sensors`, plus `GET /sensors/{id}/readings`
-  (read-only until CSV ingest lands in a later phase)
+  `/lines/{id}/machines`, `/machines/{id}/sensors`
+- `GET /sensors/{id}/readings` — query readings (`from`/`to`/`limit`)
+- `POST /sensors/{id}/upload` — upload a CSV (multipart `file`) of readings for that
+  sensor. Needs a `TimeStamp` column and a value column (matched against the sensor's
+  `metric`, falling back to `Temperature`/`AirFlow`/`Value`/`Reading`). An optional
+  `Status` column is used as-is; otherwise status is computed from the sensor's
+  `high_threshold`/`low_threshold`. Unparseable rows are skipped and counted in the
+  response rather than failing the whole upload.
 
 ## Tests
 
