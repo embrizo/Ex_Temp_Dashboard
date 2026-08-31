@@ -38,6 +38,12 @@ uvicorn app.main:app --reload
   `Status` column is used as-is; otherwise status is computed from the sensor's
   `high_threshold`/`low_threshold`. Unparseable rows are skipped and counted in the
   response rather than failing the whole upload.
+- `POST /assistant` — `{question, scope_sensor_id?}` -> `{answer}`. A LangGraph
+  ReAct agent (Claude via `langchain-anthropic`) with four read-only tools
+  (`list_customers`, `find_sensor`, `get_sensor_stats`, `list_alerts`) that let it
+  look up real data before answering instead of guessing. Requires
+  `ANTHROPIC_API_KEY` in `.env` - without it, the endpoint returns `503` rather than
+  failing unpredictably. Everything else works fine with no key set.
 
 ## Tests
 
@@ -60,8 +66,10 @@ app/
   deps.py       get_db() dependency, auth placeholder
   utils.py      get_or_404() helper shared by routers
   models/       One SQLAlchemy model per table
-  routers/      CRUD routers, one per hierarchy level, plus readings
+  routers/      CRUD routers, one per hierarchy level, plus readings/ingest/assistant
   schemas/      Pydantic request/response models per entity
+  agent/        LangGraph agent: tools.py (DB-backed, read-only), llm.py (ChatAnthropic
+                factory, returns None with no API key), graph.py (builds the ReAct agent)
 alembic/        Migrations (0001 creates the full initial schema)
 tests/          pytest suite (in-memory SQLite, no Postgres required)
 ```

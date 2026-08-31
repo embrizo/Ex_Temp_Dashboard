@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     allowed_origins: str = "http://localhost:5173"
     app_env: str = "development"
     anthropic_api_key: str | None = None
+    assistant_model: str = "claude-sonnet-5"
 
     @property
     def cors_origins(self) -> list[str]:
