@@ -11,6 +11,92 @@
   min-height: 0;
 }
 
+/* ═══════════════════════════════════════
+   AI ASSISTANT PANEL
+   ═══════════════════════════════════════ */
+.assistant-panel {
+  position: fixed;
+  bottom: var(--space-6);
+  right: var(--space-6);
+  width: 360px;
+  max-width: calc(100vw - var(--space-8));
+  height: 480px;
+  max-height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+  z-index: 900;
+  padding: 0;
+  overflow: hidden;
+}
+.assistant-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  font-weight: 700;
+  font-size: var(--text-sm);
+}
+.assistant-panel-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.assistant-panel-empty {
+  color: var(--color-text-3);
+  font-size: var(--text-sm);
+  text-align: center;
+  margin-top: var(--space-6);
+}
+.assistant-message {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  max-width: 90%;
+  white-space: pre-wrap;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.assistant-message-user {
+  align-self: flex-end;
+  background: var(--color-cyan);
+  color: #fff;
+}
+.assistant-message-assistant {
+  align-self: flex-start;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.assistant-message-error {
+  background: var(--color-red-glow);
+  color: var(--color-red);
+}
+.assistant-panel-input {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+.assistant-panel-input input {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-3);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-family: inherit;
+}
+.assistant-panel-input input:focus {
+  outline: none;
+  border-color: var(--color-cyan);
+}
+
 .hierarchy-breadcrumb {
   display: flex;
   align-items: center;

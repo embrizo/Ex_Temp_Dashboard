@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Thermometer, Moon, Sun, History } from 'lucide-react';
+import { Thermometer, Moon, Sun, History, Bot } from 'lucide-react';
+import AssistantPanel from './AssistantPanel';
 
 export default function TopBar() {
   const [isDark, setIsDark] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -40,6 +42,14 @@ export default function TopBar() {
           </Link>
           <button
             className="btn btn-ghost btn-sm"
+            onClick={() => setAssistantOpen((v) => !v)}
+            title="AI Assistant"
+            style={{ padding: '6px 8px' }}
+          >
+            <Bot size={16} />
+          </button>
+          <button
+            className="btn btn-ghost btn-sm"
             onClick={toggleTheme}
             title="Toggle Light/Dark Theme"
             style={{ padding: '6px 8px' }}
@@ -48,6 +58,7 @@ export default function TopBar() {
           </button>
         </div>
       </div>
+      <AssistantPanel open={assistantOpen} onClose={() => setAssistantOpen(false)} />
     </nav>
   );
 }
