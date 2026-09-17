@@ -56,6 +56,54 @@ Tests run against an in-memory SQLite database (dependency-overridden `get_db`),
 no Postgres instance is needed to run them. `alembic upgrade head` in CI separately
 verifies the migration against a real Postgres service container.
 
+## Deploy (self-hosted with Docker, e.g. on a Raspberry Pi)
+
+Runs Postgres and the API together via `docker-compose.yml` - no separate hosting
+account needed.
+
+```bash
+cp .env.docker.example .env    # set a real POSTGRES_PASSWORD and your Netlify origin(s)
+docker compose up -d --build
+curl http://localhost:8000/health
+```
+
+`docker compose` reads `.env` automatically; it's gitignored, so the real password
+never gets committed. The backend container runs `alembic upgrade head` before
+starting `uvicorn` on every boot, so the schema is always current.
+
+**Note:** the Dockerfile uses `python:3.11-slim`, which has official multi-arch
+images including `linux/arm64` (Raspberry Pi 5), and every dependency in
+`requirements.txt` ships prebuilt `manylinux`/`aarch64` wheels - so no compiler
+should be needed. This hasn't been build-tested on real ARM hardware; if a package
+fails to install with a compiler error, switch the base image to `python:3.11`
+(not `-slim`) or `apt-get install -y gcc` in the Dockerfile before `pip install`.
+
+### Exposing it to the internet (Cloudflare Tunnel)
+
+Netlify needs a public URL for `VITE_API_BASE_URL` - your Pi likely isn't directly
+reachable from the internet (no static IP / behind NAT), so use a tunnel instead of
+port forwarding.
+
+**Quick start (no domain, no Cloudflare account needed):**
+
+```bash
+# ARM64 (Raspberry Pi 5):
+curl -L -o cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64
+chmod +x cloudflared
+./cloudflared tunnel --url http://localhost:8000
+```
+
+This prints a random `https://<something>.trycloudflare.com` URL - set that as
+`VITE_API_BASE_URL` in Netlify's environment variables and trigger a rebuild.
+The URL changes every time this command restarts, so this is for testing, not a
+lasting setup.
+
+**Stable setup (once you have a domain added to Cloudflare):** create a *named*
+tunnel instead (`cloudflared tunnel create sensor-dashboard-api`), route a subdomain
+to it (`cloudflared tunnel route dns sensor-dashboard-api api.yourdomain.com`), and
+run it as a service (`cloudflared service install`) so the URL never changes across
+Pi reboots.
+
 ## Layout
 
 ```
