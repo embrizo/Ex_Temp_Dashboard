@@ -1,5 +1,6 @@
-import { Thermometer, Upload, Moon, Sun } from 'lucide-react';
+import { Thermometer, Upload, Moon, Sun, ArrowLeft } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 export default function Navbar({ activePage, setActivePage, hasData }) {
   const [isDark, setIsDark] = useState(false);
@@ -70,9 +71,13 @@ export default function Navbar({ activePage, setActivePage, hasData }) {
 
         {/* Actions */}
         <div className="navbar-actions">
-          <button 
-            className="btn btn-ghost btn-sm" 
-            onClick={toggleTheme} 
+          <Link to="/" className="btn btn-ghost btn-sm" title="Back to the Dashboard app">
+            <ArrowLeft size={14} />
+            Dashboard
+          </Link>
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={toggleTheme}
             title="Toggle Light/Dark Theme"
             style={{ padding: '6px 8px' }}
           >

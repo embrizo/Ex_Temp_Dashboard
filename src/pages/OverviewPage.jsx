@@ -99,7 +99,7 @@ export default function OverviewPage() {
         <div style={{ paddingTop: 'var(--space-6)', marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
           <div>
             <div className="eyebrow" style={{ marginBottom: 'var(--space-2)' }}>
-              <Thermometer size={12} /> Supply Fan K — Temperature Overview
+              <Thermometer size={12} /> {fileName || 'Temperature Overview'}
             </div>
             <h1 style={{ fontSize: 'var(--text-2xl)', fontWeight: 800, letterSpacing: '-0.02em' }}>
               Overview Dashboard

@@ -73,6 +73,17 @@ export function DataProvider({ children }) {
     });
   }, []);
 
+  // Seeds the same state parseCSV would, but from pre-built rows (e.g. API
+  // readings) instead of a File - used by the per-sensor dashboard so it can
+  // reuse the exact same stats/chart pipeline as the CSV-upload flow.
+  const loadRows = useCallback((rows, name) => {
+    setRawRows(rows);
+    setParsedRows(rows);
+    setFileName(name || '');
+    setError(null);
+    setParseProgress(100);
+  }, []);
+
   const clearData = useCallback(() => {
     setRawRows([]);
     setParsedRows([]);
@@ -121,7 +132,7 @@ export function DataProvider({ children }) {
     <DataContext.Provider value={{
       rawRows, parsedRows, setParsedRows,
       fileName, isLoading, error, parseProgress,
-      parseCSV, clearData, stats,
+      parseCSV, loadRows, clearData, stats,
     }}>
       {children}
     </DataContext.Provider>
