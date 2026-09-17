@@ -20,6 +20,7 @@ export default function HierarchyListPage({
   itemLink,
   renderSubtitle,
   emptyMessage,
+  extraActions,
 }) {
   const [modalItem, setModalItem] = useState(undefined); // undefined = closed, null = create, object = edit
   const [confirmItem, setConfirmItem] = useState(null);
@@ -60,9 +61,12 @@ export default function HierarchyListPage({
 
         <div className="hierarchy-page-header">
           <h1>{heading}</h1>
-          <button className="btn btn-primary" onClick={() => setModalItem(null)}>
-            <Plus size={16} /> {addLabel}
-          </button>
+          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+            {extraActions}
+            <button className="btn btn-primary" onClick={() => setModalItem(null)}>
+              <Plus size={16} /> {addLabel}
+            </button>
+          </div>
         </div>
 
         {loading && (

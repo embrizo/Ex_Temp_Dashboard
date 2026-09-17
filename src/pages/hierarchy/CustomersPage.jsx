@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+import { History } from 'lucide-react';
 import HierarchyListPage from '../../components/hierarchy/HierarchyListPage';
 import { useCustomers } from '../../hooks/useCustomers';
 import { createCustomer, deleteCustomer, updateCustomer } from '../../services/customers';
@@ -10,6 +12,11 @@ export default function CustomersPage() {
       breadcrumbItems={[{ label: 'Customers', to: '/' }]}
       heading="Customers"
       addLabel="Add Customer"
+      extraActions={
+        <Link to="/legacy" className="btn btn-ghost">
+          <History size={16} /> Legacy CSV Tool
+        </Link>
+      }
       fields={[{ name: 'name', label: 'Customer Name', required: true, placeholder: 'e.g. LG' }]}
       items={customers}
       loading={loading}
